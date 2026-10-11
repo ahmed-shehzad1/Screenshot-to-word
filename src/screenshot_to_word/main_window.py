@@ -1,5 +1,6 @@
 """Main GUI, floating heading bar, insertion controls, and preferences."""
-from PySide6.QtCore import Qt, QSettings
+from PySide6.QtCore import Qt, QSettings, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
     QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSpinBox,
@@ -82,6 +83,13 @@ class FloatingHeadingBar(QDialog):
         layout.addLayout(row)
         self._heading_callback = None
         self._screenshot_callback = None
+        self.setStyleSheet("""
+            QDialog { background: #111827; color: #e5e7eb; }
+            QLabel { color: #f8fafc; font-weight: 700; }
+            QLineEdit { color: #f8fafc; background: #0b1220; border: 1px solid #475569; border-radius: 7px; padding: 8px; }
+            QPushButton { color: #f8fafc; background: #263449; border: 1px solid #475569; border-radius: 7px; padding: 8px 10px; font-weight: 600; }
+            QPushButton:hover { background: #344761; }
+        """)
 
     def set_callbacks(self, heading_callback, screenshot_callback):
         self._heading_callback = heading_callback
@@ -96,12 +104,82 @@ class FloatingHeadingBar(QDialog):
             self._screenshot_callback()
 
 
+class AboutDialog(QDialog):
+    """About the developer and ways to support the open-source project."""
+    GITHUB_PROFILE = "https://github.com/ahmed-shehzad1"
+    REPOSITORY_URL = "https://github.com/ahmed-shehzad1/Screenshot-to-word"
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("About Screenshot to Word")
+        self.setMinimumWidth(420)
+
+        title = QLabel("Made by Ahmed Shahzad")
+        title.setObjectName("aboutTitle")
+        subtitle = QLabel("Student at Air University, Islamabad · Age 21")
+        subtitle.setWordWrap(True)
+        story = QLabel(
+            "I’m a student at Air University Islamabad who loves coding and "
+            "building things that can help people. I created Screenshot to Word "
+            "to make capturing and organizing screenshots in Microsoft Word "
+            "simpler and faster."
+        )
+        story.setWordWrap(True)
+
+        support_title = QLabel("Enjoying the app? ❤️")
+        support_title.setObjectName("aboutTitle")
+        support = QLabel(
+            "If this tool is useful to you, thank you for giving it a try! "
+            "You can support its development by following me on GitHub and "
+            "starring the repository. It helps others discover the project "
+            "and motivates me to build more useful tools."
+        )
+        support.setWordWrap(True)
+
+        profile_button = QPushButton("Follow me on GitHub")
+        profile_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(self.GITHUB_PROFILE))
+        )
+        star_button = QPushButton("⭐ Star the repository")
+        star_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(self.REPOSITORY_URL))
+        )
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.accept)
+
+        buttons = QHBoxLayout()
+        buttons.addWidget(profile_button)
+        buttons.addWidget(star_button)
+        footer = QHBoxLayout()
+        footer.addStretch(1)
+        footer.addWidget(close_button)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.addWidget(title)
+        layout.addWidget(subtitle)
+        layout.addWidget(story)
+        layout.addSpacing(6)
+        layout.addWidget(support_title)
+        layout.addWidget(support)
+        layout.addLayout(buttons)
+        layout.addLayout(footer)
+        self.setStyleSheet("""
+            QDialog { background: #f7f8fa; }
+            QLabel { color: #30394a; }
+            QLabel#aboutTitle { color: #172033; font-size: 15px; font-weight: 700; }
+            QPushButton { padding: 8px 10px; border: 1px solid #d4d9e2; border-radius: 6px; background: white; color: #172033; }
+            QPushButton:hover { background: #eef3fb; }
+        """)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = QSettings("ScreenshotToWord", "ScreenshotToWord")
         self.setWindowTitle("Screenshot to Word")
-        self.setMinimumSize(500, 460)
+        self.setMinimumSize(620, 560)
+        self.resize(700, 650)
         self.writer = WordWriter()
         self.monitor = ClipboardMonitor(int(self.settings.value("monitor_interval_ms", 300)), self)
         self.monitor.image_detected.connect(self._insert_image)
@@ -135,6 +213,8 @@ class MainWindow(QMainWindow):
         self.quickbar_button.clicked.connect(self._toggle_quickbar)
         self.settings_button = QPushButton("Settings")
         self.settings_button.clicked.connect(self._open_settings)
+        self.about_button = QPushButton("About / Support")
+        self.about_button.clicked.connect(self._show_about)
         self.check_button = QPushButton("Check Word")
         self.check_button.clicked.connect(self._refresh_document)
 
@@ -148,6 +228,7 @@ class MainWindow(QMainWindow):
         tools_row = QHBoxLayout()
         tools_row.addWidget(self.quickbar_button)
         tools_row.addWidget(self.settings_button)
+        tools_row.addWidget(self.about_button)
 
         note = QLabel("Tip: open the intended Word document first. Screenshots are inserted locally; save the document in Word when ready.")
         note.setWordWrap(True)
@@ -170,23 +251,32 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+        # Premium dark UI with high-contrast controls and clearer visual grouping.
         self.setStyleSheet("""
-            QMainWindow { background: #f7f8fa; color: #172033; }
-            QWidget { font-size: 10pt; color: #172033; }
-            QLabel { color: #30394a; }
-            QCheckBox { color: #30394a; }
-            QLabel#appTitle { font-size: 22px; font-weight: 700; color: #172033; }
-            QLabel#note { color: #5b6474; }
-            QPushButton { padding: 8px 10px; border: 1px solid #d4d9e2; border-radius: 6px; background: white; }
-            QPushButton:hover { background: #eef3fb; }
-            QPushButton:disabled { color: #9aa2af; background: #f0f2f5; }
-            QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #172033; background: #ffffff; padding: 6px; border: 1px solid #d4d9e2; border-radius: 5px; }
-            QCheckBox { padding: 4px 0; }
+            QMainWindow, QWidget { background: #111827; color: #e5e7eb; font-size: 10pt; }
+            QWidget#centralwidget { background: #111827; }
+            QLabel { color: #cbd5e1; }
+            QLabel#appTitle { font-size: 25px; font-weight: 800; color: #f8fafc; padding-bottom: 2px; }
+            QLabel#note { color: #94a3b8; background: #172033; border: 1px solid #293548; border-radius: 8px; padding: 10px; }
+            QPushButton { color: #f8fafc; background: #263449; border: 1px solid #3a4b63; border-radius: 8px; padding: 10px 12px; font-weight: 600; }
+            QPushButton:hover { background: #344761; border-color: #647da0; }
+            QPushButton:pressed { background: #1d293b; }
+            QPushButton:disabled { color: #718096; background: #1b2534; border-color: #273447; }
+            QCheckBox { color: #e2e8f0; spacing: 8px; padding: 8px 0; }
+            QCheckBox::indicator { width: 17px; height: 17px; }
+            QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #f8fafc; background: #0b1220; selection-background-color: #2563eb; padding: 8px; border: 1px solid #37465c; border-radius: 7px; }
+            QComboBox QAbstractItemView { background: #172033; color: #f8fafc; selection-background-color: #2563eb; }
+            QScrollBar:vertical { background: #111827; width: 10px; margin: 0; }
+            QScrollBar::handle:vertical { background: #37465c; border-radius: 4px; min-height: 24px; }
+            QToolTip { color: #f8fafc; background: #0b1220; border: 1px solid #475569; }
         """)
-        self.quickbar = FloatingHeadingBar(self)
+        self.quickbar = FloatingHeadingBar()
         self.quickbar.set_callbacks(self._insert_heading, self._manual_insert)
         self._refresh_document()
         self._update_auto_controls()
+
+    def _show_about(self):
+        AboutDialog(self).exec()
 
     def _toggle_auto(self, checked):
         self._auto_enabled = checked
@@ -298,6 +388,15 @@ class MainWindow(QMainWindow):
 
     def _set_status(self, message):
         self.status_label.setText(f"Status: {message}")
+
+    def changeEvent(self, event):
+        # The quick bar is an independent top-level window, so it remains visible
+        # when the main window is minimized. Re-raise it if it was already shown.
+        super().changeEvent(event)
+        if event.type() == event.Type.WindowStateChange and self.isMinimized():
+            if self.quickbar.isVisible():
+                self.quickbar.show()
+                self.quickbar.raise_()
 
     def closeEvent(self, event):
         self.monitor.stop()
