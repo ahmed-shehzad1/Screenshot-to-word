@@ -43,7 +43,16 @@ class WordWriter:
             image.save(temp_path, format="PNG")
 
             end_pos = max(0, int(document.Content.End) - 1)
-            document.Range(end_pos, end_pos).InsertAfter("\r")
+            # Start a new paragraph only when the current final paragraph already
+            # contains content. Do not add an extra paragraph after each image.
+            end_range = document.Range(end_pos, end_pos)
+            if end_pos > 0:
+                try:
+                    final_para = document.Paragraphs.Last.Range
+                    if final_para.End - final_para.Start > 1:
+                        end_range.InsertAfter("\r")
+                except Exception:
+                    end_range.InsertAfter("\r")
             insert_pos = max(0, int(document.Content.End) - 1)
             shape = document.InlineShapes.AddPicture(
                 FileName=str(Path(temp_path).resolve()),
@@ -56,7 +65,14 @@ class WordWriter:
             if float(shape.Width) > width_points:
                 shape.LockAspectRatio = True
                 shape.Width = width_points
-            document.Range(document.Content.End - 1, document.Content.End - 1).InsertAfter("\r")
+            # Remove Word's default paragraph spacing around screenshot paragraphs.
+            try:
+                paragraph = shape.Range.ParagraphFormat
+                paragraph.SpaceBefore = 0
+                paragraph.SpaceAfter = 0
+                paragraph.LineSpacingRule = 0  # single spacing
+            except Exception:
+                pass
             return document_name
         except WordAutomationError:
             raise

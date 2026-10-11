@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: screenshot-to-word
-Version: 0.2.0
+Version: 0.2.1
 Summary: A Windows utility that appends clipboard screenshots to Microsoft Word.
 Author: Screenshot-to-Word contributors
 License: MIT License

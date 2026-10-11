@@ -171,13 +171,16 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
         self.setStyleSheet("""
-            QMainWindow { background: #f7f8fa; }
-            QWidget { font-size: 10pt; }
+            QMainWindow { background: #f7f8fa; color: #172033; }
+            QWidget { font-size: 10pt; color: #172033; }
+            QLabel { color: #30394a; }
+            QCheckBox { color: #30394a; }
             QLabel#appTitle { font-size: 22px; font-weight: 700; color: #172033; }
             QLabel#note { color: #5b6474; }
             QPushButton { padding: 8px 10px; border: 1px solid #d4d9e2; border-radius: 6px; background: white; }
             QPushButton:hover { background: #eef3fb; }
-            QPushButton:disabled { color: #9aa2af; }
+            QPushButton:disabled { color: #9aa2af; background: #f0f2f5; }
+            QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #172033; background: #ffffff; padding: 6px; border: 1px solid #d4d9e2; border-radius: 5px; }
             QCheckBox { padding: 4px 0; }
         """)
         self.quickbar = FloatingHeadingBar(self)
