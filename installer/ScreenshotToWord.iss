@@ -1,6 +1,6 @@
 ; Build the app first with PyInstaller, then compile this file with Inno Setup 6.
 #define MyAppName "Screenshot to Word"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.2.0"
 #define MyAppPublisher "Screenshot-to-Word contributors"
 #define MyAppExeName "ScreenshotToWord.exe"
 

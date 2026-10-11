@@ -1,12 +1,29 @@
-"""Detect new clipboard images using Windows' clipboard sequence counter."""
+"""Detect new clipboard images using the Windows clipboard sequence counter."""
 import ctypes
 import hashlib
+import io
 import time
 from typing import Optional
 
 from PIL import Image
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QTimer, Signal, QBuffer, QByteArray, QIODevice
 from PySide6.QtGui import QGuiApplication
+
+
+def current_clipboard_image():
+    """Return a copy of the current clipboard image as a PIL RGB image, or None."""
+    qimage = QGuiApplication.clipboard().image()
+    if qimage.isNull():
+        return None
+    try:
+        byte_array = QByteArray()
+        qbuffer = QBuffer(byte_array)
+        qbuffer.open(QIODevice.OpenModeFlag.WriteOnly)
+        qimage.save(qbuffer, "PNG")
+        qbuffer.close()
+        return Image.open(io.BytesIO(bytes(byte_array))).convert("RGB").copy()
+    except Exception:
+        return None
 
 
 class ClipboardMonitor(QObject):
@@ -16,7 +33,7 @@ class ClipboardMonitor(QObject):
     def __init__(self, interval_ms: int = 300, parent=None):
         super().__init__(parent)
         self._timer = QTimer(self)
-        self._timer.setInterval(interval_ms)
+        self._timer.setInterval(int(interval_ms))
         self._timer.timeout.connect(self._poll)
         self._last_sequence = self._sequence_number()
         self._last_hash: Optional[str] = None
@@ -30,16 +47,19 @@ class ClipboardMonitor(QObject):
         except Exception:
             return -1
 
+    def set_interval(self, interval_ms: int) -> None:
+        self._timer.setInterval(max(100, int(interval_ms)))
+
     def start(self) -> None:
         self._last_sequence = self._sequence_number()
         self._running = True
         self._timer.start()
-        self.status_changed.emit("Monitoring clipboard for screenshots.")
+        self.status_changed.emit("Automatic monitoring is running.")
 
     def stop(self) -> None:
         self._timer.stop()
         self._running = False
-        self.status_changed.emit("Monitoring paused.")
+        self.status_changed.emit("Automatic monitoring is stopped.")
 
     @property
     def running(self) -> bool:
@@ -50,41 +70,14 @@ class ClipboardMonitor(QObject):
         if sequence < 0 or sequence == self._last_sequence:
             return
         self._last_sequence = sequence
-
-        # Clipboard formats can be published a moment apart by Snipping Tool.
-        clipboard = QGuiApplication.clipboard()
-        qimage = clipboard.image()
-        if qimage.isNull():
+        image = current_clipboard_image()
+        if image is None:
             return
-
-        try:
-            buffer = qimage.bits()
-            buffer.setsize(qimage.sizeInBytes())
-            image = Image.frombytes(
-                "RGBA" if qimage.hasAlphaChannel() else "RGB",
-                (qimage.width(), qimage.height()),
-                bytes(buffer),
-                "raw",
-                "BGRA" if qimage.hasAlphaChannel() else "BGR",
-                qimage.bytesPerLine(),
-            ).convert("RGB")
-        except Exception:
-            # A PNG round-trip is slower but reliable across Qt image formats.
-            from PySide6.QtCore import QBuffer, QByteArray, QIODevice
-            byte_array = QByteArray()
-            qbuffer = QBuffer(byte_array)
-            qbuffer.open(QIODevice.OpenModeFlag.WriteOnly)
-            qimage.save(qbuffer, "PNG")
-            qbuffer.close()
-            image = Image.open(__import__("io").BytesIO(bytes(byte_array))).convert("RGB")
-
         digest = hashlib.sha256(image.tobytes()).hexdigest()
         now = time.monotonic()
-        # Windows can update the clipboard sequence for multiple formats for
-        # one capture. Ignore the same image if it reappears immediately.
+        # Windows can publish several clipboard formats for a single capture.
         if digest == self._last_hash and now - self._last_emitted_at < 1.5:
             return
-
         self._last_hash = digest
         self._last_emitted_at = now
         self.image_detected.emit(image)
