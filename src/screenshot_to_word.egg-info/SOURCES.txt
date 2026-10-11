@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/screenshot_to_word/__init__.py
+src/screenshot_to_word/__main__.py
+src/screenshot_to_word/app.py
+src/screenshot_to_word/clipboard_monitor.py
+src/screenshot_to_word/main_window.py
+src/screenshot_to_word/word_writer.py
+src/screenshot_to_word.egg-info/PKG-INFO
+src/screenshot_to_word.egg-info/SOURCES.txt
+src/screenshot_to_word.egg-info/dependency_links.txt
+src/screenshot_to_word.egg-info/entry_points.txt
+src/screenshot_to_word.egg-info/requires.txt
+src/screenshot_to_word.egg-info/top_level.txt

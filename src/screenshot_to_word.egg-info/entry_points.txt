@@ -1,0 +1,2 @@
+[console_scripts]
+screenshot-to-word = screenshot_to_word.app:main

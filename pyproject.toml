@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "screenshot-to-word"
+version = "0.1.0"
+description = "A Windows utility that appends clipboard screenshots to Microsoft Word."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Screenshot-to-Word contributors" }]
+dependencies = [
+  "PySide6>=6.7,<7",
+  "Pillow>=10.0,<13",
+  "pywin32>=306; sys_platform == 'win32'",
+]
+
+[project.scripts]
+screenshot-to-word = "screenshot_to_word.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
