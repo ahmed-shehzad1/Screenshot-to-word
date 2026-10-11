@@ -1,6 +1,8 @@
 """Main GUI, floating heading bar, insertion controls, and preferences."""
 from PySide6.QtCore import Qt, QSettings, QUrl
 from PySide6.QtGui import QDesktopServices
+import win32com.client
+
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
     QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSpinBox,
@@ -65,13 +67,18 @@ class FloatingHeadingBar(QDialog):
         super().__init__(parent, Qt.WindowType.Tool | Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowTitle("Screenshot to Word — Quick Bar")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(300)
         self.heading_input = QLineEdit()
         self.heading_input.setPlaceholderText("Task heading (e.g. Task 3 — Row Reduction)")
         self.heading_button = QPushButton("Insert Heading")
         self.screenshot_button = QPushButton("Insert Screenshot")
+        self.check_word_button = QPushButton("W")
+        self.check_word_button.setFixedSize(34, 34)
+        self.check_word_button.setToolTip("Open Microsoft Word / check the active document")
+        self.check_word_button.setAccessibleName("Check Word")
         self.heading_button.clicked.connect(self._emit_heading)
         self.screenshot_button.clicked.connect(self._emit_screenshot)
+        self.check_word_button.clicked.connect(self._emit_check_word)
         self.heading_input.returnPressed.connect(self._emit_heading)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -80,9 +87,11 @@ class FloatingHeadingBar(QDialog):
         row = QHBoxLayout()
         row.addWidget(self.heading_button)
         row.addWidget(self.screenshot_button)
+        row.addWidget(self.check_word_button)
         layout.addLayout(row)
         self._heading_callback = None
         self._screenshot_callback = None
+        self._check_word_callback = None
         self.setStyleSheet("""
             QDialog { background: #111827; color: #e5e7eb; }
             QLabel { color: #f8fafc; font-weight: 700; }
@@ -91,9 +100,14 @@ class FloatingHeadingBar(QDialog):
             QPushButton:hover { background: #344761; }
         """)
 
-    def set_callbacks(self, heading_callback, screenshot_callback):
+    def set_callbacks(self, heading_callback, screenshot_callback, check_word_callback=None):
         self._heading_callback = heading_callback
         self._screenshot_callback = screenshot_callback
+        self._check_word_callback = check_word_callback
+
+    def _emit_check_word(self):
+        if self._check_word_callback:
+            self._check_word_callback()
 
     def _emit_heading(self):
         if self._heading_callback:
@@ -279,8 +293,6 @@ class MainWindow(QMainWindow):
         self.settings_button.clicked.connect(self._open_settings)
         self.about_button = QPushButton("About / Support")
         self.about_button.clicked.connect(self._show_about)
-        self.check_button = QPushButton("Check Word")
-        self.check_button.clicked.connect(self._refresh_document)
 
         controls = QHBoxLayout()
         controls.addWidget(self.start_button)
@@ -345,7 +357,7 @@ class MainWindow(QMainWindow):
             QToolTip { color: #f8fafc; background: #0b1220; border: 1px solid #475569; }
         """)
         self.quickbar = FloatingHeadingBar()
-        self.quickbar.set_callbacks(self._insert_heading, self._manual_insert)
+        self.quickbar.set_callbacks(self._insert_heading, self._manual_insert, self._open_or_check_word)
         self._refresh_document()
         self._update_auto_controls()
 
@@ -481,6 +493,33 @@ class MainWindow(QMainWindow):
     def _show_error(self, title, message):
         if self.settings.value("error_mode", "warn") == "warn":
             QMessageBox.warning(self, title, message)
+
+    def _open_or_check_word(self):
+        """Bring Microsoft Word forward, launching it and creating a blank document if needed."""
+        try:
+            try:
+                word = win32com.client.GetActiveObject("Word.Application")
+            except Exception:
+                word = win32com.client.Dispatch("Word.Application")
+            word.Visible = True
+            if word.Documents.Count == 0:
+                word.Documents.Add()
+            try:
+                word.Activate()
+                word.WindowState = 0  # wdWindowStateNormal
+            except Exception:
+                pass
+            self._refresh_document()
+            self._set_status("Microsoft Word is open and ready.")
+            if self.quickbar.isVisible():
+                self.quickbar.raise_()
+        except Exception as exc:
+            QMessageBox.warning(
+                self,
+                "Could not open Microsoft Word",
+                "Please make sure Microsoft Word desktop is installed.\\n\\n"
+                f"Details: {exc}",
+            )
 
     def _refresh_document(self):
         try:
