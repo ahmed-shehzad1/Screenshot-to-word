@@ -78,7 +78,9 @@ class FloatingHeadingBar(QDialog):
         self.check_word_button.setAccessibleName("Check Word")
         self.heading_button.clicked.connect(self._emit_heading)
         self.screenshot_button.clicked.connect(self._emit_screenshot)
-        self.check_word_button.clicked.connect(self._emit_check_word)
+        # Show Word only while the user holds this compact preview button.
+        self.check_word_button.pressed.connect(self._emit_check_word_pressed)
+        self.check_word_button.released.connect(self._emit_check_word_released)
         self.heading_input.returnPressed.connect(self._emit_heading)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -92,6 +94,7 @@ class FloatingHeadingBar(QDialog):
         self._heading_callback = None
         self._screenshot_callback = None
         self._check_word_callback = None
+        self._check_word_release_callback = None
         self.setStyleSheet("""
             QDialog { background: #111827; color: #e5e7eb; }
             QLabel { color: #f8fafc; font-weight: 700; }
@@ -100,14 +103,22 @@ class FloatingHeadingBar(QDialog):
             QPushButton:hover { background: #344761; }
         """)
 
-    def set_callbacks(self, heading_callback, screenshot_callback, check_word_callback=None):
+    def set_callbacks(
+        self, heading_callback, screenshot_callback,
+        check_word_callback=None, check_word_release_callback=None,
+    ):
         self._heading_callback = heading_callback
         self._screenshot_callback = screenshot_callback
         self._check_word_callback = check_word_callback
+        self._check_word_release_callback = check_word_release_callback
 
-    def _emit_check_word(self):
+    def _emit_check_word_pressed(self):
         if self._check_word_callback:
             self._check_word_callback()
+
+    def _emit_check_word_released(self):
+        if self._check_word_release_callback:
+            self._check_word_release_callback()
 
     def _emit_heading(self):
         if self._heading_callback:
@@ -297,7 +308,6 @@ class MainWindow(QMainWindow):
         controls = QHBoxLayout()
         controls.addWidget(self.start_button)
         controls.addWidget(self.pause_button)
-        controls.addWidget(self.check_button)
         manual_row = QHBoxLayout()
         manual_row.addWidget(self.manual_button)
         manual_row.addWidget(self.heading_button)
@@ -357,7 +367,12 @@ class MainWindow(QMainWindow):
             QToolTip { color: #f8fafc; background: #0b1220; border: 1px solid #475569; }
         """)
         self.quickbar = FloatingHeadingBar()
-        self.quickbar.set_callbacks(self._insert_heading, self._manual_insert, self._open_or_check_word)
+        self.quickbar.set_callbacks(
+            self._insert_heading,
+            self._manual_insert,
+            self._show_word_preview,
+            self._hide_word_preview,
+        )
         self._refresh_document()
         self._update_auto_controls()
 
@@ -494,32 +509,44 @@ class MainWindow(QMainWindow):
         if self.settings.value("error_mode", "warn") == "warn":
             QMessageBox.warning(self, title, message)
 
-    def _open_or_check_word(self):
-        """Bring Microsoft Word forward, launching it and creating a blank document if needed."""
+    def _show_word_preview(self):
+        """Show Word while the floating W button is held down."""
         try:
             try:
-                word = win32com.client.GetActiveObject("Word.Application")
+                self._word_preview_app = win32com.client.GetActiveObject("Word.Application")
             except Exception:
-                word = win32com.client.Dispatch("Word.Application")
+                self._word_preview_app = win32com.client.Dispatch("Word.Application")
+            word = self._word_preview_app
             word.Visible = True
             if word.Documents.Count == 0:
                 word.Documents.Add()
             try:
-                word.Activate()
                 word.WindowState = 0  # wdWindowStateNormal
+                word.Activate()
+                if word.ActiveWindow is not None:
+                    word.ActiveWindow.Activate()
             except Exception:
                 pass
             self._refresh_document()
-            self._set_status("Microsoft Word is open and ready.")
-            if self.quickbar.isVisible():
-                self.quickbar.raise_()
-        except Exception as exc:
-            QMessageBox.warning(
-                self,
-                "Could not open Microsoft Word",
-                "Please make sure Microsoft Word desktop is installed.\\n\\n"
-                f"Details: {exc}",
-            )
+            self._set_status("Hold the W button to preview Word; release it to minimize Word.")
+        except Exception:
+            self._word_preview_app = None
+            self._set_status("Could not show Microsoft Word. Check that desktop Word is installed.")
+
+    def _hide_word_preview(self):
+        """Minimize Word immediately when the floating W button is released."""
+        word = getattr(self, "_word_preview_app", None)
+        if word is None:
+            return
+        try:
+            word.WindowState = 2  # wdWindowStateMinimize
+            try:
+                if word.ActiveWindow is not None:
+                    word.ActiveWindow.WindowState = 2
+            except Exception:
+                pass
+        except Exception:
+            pass
 
     def _refresh_document(self):
         try:
