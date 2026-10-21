@@ -6,7 +6,7 @@ import win32com.client
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
     QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSpinBox,
-    QVBoxLayout, QWidget, QFrame,
+    QVBoxLayout, QWidget, QFrame, QListWidget, QListWidgetItem,
 )
 
 from screenshot_to_word.clipboard_monitor import ClipboardMonitor, current_clipboard_image
@@ -96,11 +96,12 @@ class FloatingHeadingBar(QDialog):
         self._check_word_callback = None
         self._check_word_release_callback = None
         self.setStyleSheet("""
-            QDialog { background: #111827; color: #e5e7eb; }
-            QLabel { color: #f8fafc; font-weight: 700; }
-            QLineEdit { color: #f8fafc; background: #0b1220; border: 1px solid #475569; border-radius: 7px; padding: 8px; }
-            QPushButton { color: #f8fafc; background: #263449; border: 1px solid #475569; border-radius: 7px; padding: 8px 10px; font-weight: 600; }
-            QPushButton:hover { background: #344761; }
+            QDialog { background: #F5F0E7; color: #211E1A; }
+            QLabel { color: #33271F; font-weight: 700; }
+            QLineEdit { color: #29241F; background: #FFFCF6; border: 1px solid #DCCDBB; border-radius: 7px; padding: 8px; }
+            QPushButton { color: #33271F; background: #FFFCF6; border: 1px solid #DCCDBB; border-radius: 7px; padding: 8px 10px; font-weight: 700; }
+            QPushButton:hover { background: #F1E5D6; }
+            QSpinBox, QDoubleSpinBox, QComboBox { color: #29241F; background: #FFFCF6; border: 1px solid #DCCDBB; border-radius: 7px; padding: 7px; }
         """)
 
     def set_callbacks(
@@ -130,7 +131,7 @@ class FloatingHeadingBar(QDialog):
 
 
 class AboutDialog(QDialog):
-    """Polished About and open-source support dialog."""
+    """Warm, editorial About dialog with a visible heart motif."""
     GITHUB_PROFILE = "https://github.com/ahmed-shehzad1"
     REPOSITORY_URL = "https://github.com/ahmed-shehzad1/Screenshot-to-word"
 
@@ -139,56 +140,61 @@ class AboutDialog(QDialog):
         self.setWindowTitle("About Screenshot to Word")
         self.setMinimumWidth(500)
         self.setStyleSheet("""
-            QDialog { background: #0b1220; color: #e5edf8; }
-            QLabel { color: #cbd5e1; font-size: 10pt; }
-            QLabel#heroName { color: #f8fafc; font-size: 21pt; font-weight: 800; }
-            QLabel#eyebrow { color: #60a5fa; font-size: 9pt; font-weight: 700; letter-spacing: 1px; }
-            QFrame#panel { background: #111c2e; border: 1px solid #27364d; border-radius: 14px; }
-            QPushButton { color: #f8fafc; background: #243650; border: 1px solid #3a506f; border-radius: 9px; padding: 11px 14px; font-weight: 700; }
-            QPushButton:hover { background: #304967; }
-            QPushButton#primary { background: #2563eb; border-color: #3b82f6; }
-            QPushButton#primary:hover { background: #1d4ed8; }
-            QPushButton#quiet { background: transparent; border-color: #334155; }
+            QDialog { background: #F5F0E7; color: #211E1A; }
+            QLabel { color: #5F584F; font-size: 10pt; }
+            QLabel#eyebrow { color: #C85A2B; font-size: 9pt; font-weight: 800; letter-spacing: 2px; }
+            QLabel#heroName { color: #211E1A; font-size: 23pt; font-weight: 900; }
+            QLabel#heart { color: #D85C32; background: #FBE1D4; border: 1px solid #EFC4B1; border-radius: 22px; font-size: 30pt; font-weight: 700; }
+            QFrame#panel { background: #FFFCF6; border: 1px solid #E4DACE; border-radius: 14px; }
+            QPushButton { color: #33271F; background: #EFE6D9; border: 1px solid #DCCDBB; border-radius: 9px; padding: 11px 14px; font-weight: 700; }
+            QPushButton:hover { background: #E7D8C5; }
+            QPushButton#primary { color: #FFF9F2; background: #C85A2B; border-color: #C85A2B; }
+            QPushButton#primary:hover { background: #A94720; }
+            QPushButton#quiet { background: transparent; border-color: transparent; }
         """)
-
         root = QVBoxLayout(self)
-        root.setContentsMargins(22, 22, 22, 20)
+        root.setContentsMargins(24, 24, 24, 20)
         root.setSpacing(14)
+
+        eyebrow = QLabel("A SMALL TOOL, MADE WITH CARE")
+        eyebrow.setObjectName("eyebrow")
+        root.addWidget(eyebrow)
 
         hero = QFrame()
         hero.setObjectName("panel")
         hero_layout = QHBoxLayout(hero)
-        hero_layout.setContentsMargins(18, 18, 18, 18)
-        logo = QLabel("SW")
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setFixedSize(66, 66)
-        logo.setStyleSheet("background:#2563eb; color:white; border-radius:16px; font-size:21pt; font-weight:900;")
+        hero_layout.setContentsMargins(18, 20, 18, 20)
+        hero_layout.setSpacing(16)
+        heart = QLabel("♥")
+        heart.setObjectName("heart")
+        heart.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        heart.setFixedSize(76, 76)
         intro = QVBoxLayout()
-        eyebrow = QLabel("THE DEVELOPER")
-        eyebrow.setObjectName("eyebrow")
-        name = QLabel("Ahmed Shahzad")
+        intro.setSpacing(4)
+        name = QLabel("Screenshot to Word")
         name.setObjectName("heroName")
-        subtitle = QLabel("Student · Air University, Islamabad · 21")
-        subtitle.setWordWrap(True)
-        intro.addWidget(eyebrow)
+        subtitle = QLabel("Built by Ahmed Shahzad")
+        tagline = QLabel("A simpler place for the screenshots that matter.")
+        tagline.setWordWrap(True)
         intro.addWidget(name)
         intro.addWidget(subtitle)
-        hero_layout.addWidget(logo)
-        hero_layout.addSpacing(14)
+        intro.addSpacing(3)
+        intro.addWidget(tagline)
+        hero_layout.addWidget(heart, 0, Qt.AlignmentFlag.AlignTop)
         hero_layout.addLayout(intro, 1)
         root.addWidget(hero)
 
         story_panel = QFrame()
         story_panel.setObjectName("panel")
         story_layout = QVBoxLayout(story_panel)
-        story_layout.setContentsMargins(18, 16, 18, 16)
-        story_layout.setSpacing(8)
-        story_heading = QLabel("Why I built this")
-        story_heading.setStyleSheet("color:#f8fafc; font-size:12pt; font-weight:800;")
-        story = QLabel("I love coding things that can help people. Screenshot to Word is a small project to make capturing and organizing screenshots in Microsoft Word simpler and faster.")
+        story_layout.setContentsMargins(18, 16, 18, 17)
+        story_layout.setSpacing(7)
+        heading = QLabel("Why I built this")
+        heading.setStyleSheet("color:#211E1A; font-size:13pt; font-weight:850;")
+        story = QLabel("I enjoy building useful little tools. Screenshot to Word makes it easier to collect screenshots and keep them organized in a Microsoft Word document, without interrupting your workflow.")
         story.setWordWrap(True)
-        story.setMinimumHeight(54)
-        story_layout.addWidget(story_heading)
+        story.setMinimumHeight(52)
+        story_layout.addWidget(heading)
         story_layout.addWidget(story)
         root.addWidget(story_panel)
 
@@ -196,17 +202,17 @@ class AboutDialog(QDialog):
         support_panel.setObjectName("panel")
         support_layout = QVBoxLayout(support_panel)
         support_layout.setContentsMargins(18, 16, 18, 18)
-        support_layout.setSpacing(9)
-        support_heading = QLabel("Enjoying Screenshot to Word?")
-        support_heading.setStyleSheet("color:#f8fafc; font-size:13pt; font-weight:800;")
-        support_copy = QLabel("Thanks for trying it! Following me and starring the repository helps other people discover the project and encourages me to build more useful tools.")
+        support_layout.setSpacing(8)
+        support_heading = QLabel("If this tool helped you")
+        support_heading.setStyleSheet("color:#211E1A; font-size:13pt; font-weight:850;")
+        support_copy = QLabel("A follow or a repository star is a small gesture that helps this project reach more people. Thanks for giving it a try.")
         support_copy.setWordWrap(True)
         support_layout.addWidget(support_heading)
         support_layout.addWidget(support_copy)
         buttons = QHBoxLayout()
         profile_button = QPushButton("↗  Follow on GitHub")
         profile_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.GITHUB_PROFILE)))
-        star_button = QPushButton("★  Star the repository")
+        star_button = QPushButton("♥  Star the project")
         star_button.setObjectName("primary")
         star_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.REPOSITORY_URL)))
         buttons.addWidget(profile_button)
@@ -216,7 +222,7 @@ class AboutDialog(QDialog):
 
         footer = QHBoxLayout()
         footer.addStretch(1)
-        close_button = QPushButton("Done")
+        close_button = QPushButton("Close")
         close_button.setObjectName("quiet")
         close_button.clicked.connect(self.accept)
         footer.addWidget(close_button)
@@ -228,11 +234,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings("ScreenshotToWord", "ScreenshotToWord")
         self.setWindowTitle("Screenshot to Word")
-        # Replace the default Windows title bar with a branded, draggable title bar.
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
-        self.setMinimumSize(620, 600)
-        self.resize(760, 700)
+        self.setMinimumSize(660, 700)
+        self.resize(820, 860)
         self._drag_position = None
+        self._activity_items = []
         self.writer = WordWriter()
         self.monitor = ClipboardMonitor(int(self.settings.value("monitor_interval_ms", 300)), self)
         self.monitor.image_detected.connect(self._insert_image)
@@ -242,18 +248,18 @@ class MainWindow(QMainWindow):
         titlebar = QWidget()
         titlebar.setObjectName("customTitleBar")
         titlebar_layout = QHBoxLayout(titlebar)
-        titlebar_layout.setContentsMargins(14, 8, 8, 8)
+        titlebar_layout.setContentsMargins(18, 10, 10, 10)
         titlebar_layout.setSpacing(10)
-        brand_mark = QLabel("SW")
+        brand_mark = QLabel("S/")
         brand_mark.setObjectName("brandMark")
         brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        brand_mark.setFixedSize(34, 34)
-        brand_name = QLabel("Screenshot to Word")
+        brand_mark.setFixedSize(38, 38)
+        brand_name = QLabel("SCREENSHOT TO WORD")
         brand_name.setObjectName("brandName")
-        brand_hint = QLabel("SCREEN CAPTURE WORKFLOW")
+        brand_hint = QLabel("A DESKTOP TOOL FOR YOUR WORKFLOW")
         brand_hint.setObjectName("brandHint")
         brand_text = QVBoxLayout()
-        brand_text.setSpacing(0)
+        brand_text.setSpacing(2)
         brand_text.addWidget(brand_name)
         brand_text.addWidget(brand_hint)
         titlebar_layout.addWidget(brand_mark)
@@ -261,110 +267,202 @@ class MainWindow(QMainWindow):
         titlebar_layout.addStretch(1)
         self.minimize_button = QPushButton("—")
         self.minimize_button.setObjectName("windowControl")
-        self.minimize_button.setFixedSize(36, 30)
+        self.minimize_button.setFixedSize(34, 30)
         self.minimize_button.clicked.connect(self.showMinimized)
         self.maximize_button = QPushButton("□")
         self.maximize_button.setObjectName("windowControl")
-        self.maximize_button.setFixedSize(36, 30)
+        self.maximize_button.setFixedSize(34, 30)
         self.maximize_button.clicked.connect(self._toggle_maximize)
         close_button = QPushButton("×")
         close_button.setObjectName("closeControl")
-        close_button.setFixedSize(36, 30)
+        close_button.setFixedSize(34, 30)
         close_button.clicked.connect(self.close)
         titlebar_layout.addWidget(self.minimize_button)
         titlebar_layout.addWidget(self.maximize_button)
         titlebar_layout.addWidget(close_button)
 
-        title = QLabel("Screenshot to Word")
+        eyebrow = QLabel("CAPTURE  /  COLLECT  /  CONTINUE")
+        eyebrow.setObjectName("eyebrow")
+        title = QLabel("Keep the good\n bits in one place.")
         title.setObjectName("appTitle")
-        subtitle = QLabel("Append Snipping Tool screenshots to your open Microsoft Word document.")
+        subtitle = QLabel("Send clipboard screenshots straight into your open Word document.")
+        subtitle.setObjectName("appSubtitle")
         subtitle.setWordWrap(True)
-        self.document_label = QLabel("Word document: checking…")
-        self.document_label.setWordWrap(True)
-        self.status_label = QLabel("Status: ready")
-        self.status_label.setWordWrap(True)
-        self.clipboard_label = QLabel("Clipboard: not checked yet")
-        self.clipboard_label.setWordWrap(True)
 
+        self.document_label = QLabel("Checking for an open Word document…")
+        self.document_label.setObjectName("documentValue")
+        self.document_state = QLabel("WORD DESTINATION")
+        self.document_state.setObjectName("cardEyebrow")
+        document_card = QFrame()
+        document_card.setObjectName("paperCard")
+        document_layout = QVBoxLayout(document_card)
+        document_layout.setContentsMargins(18, 15, 18, 16)
+        document_layout.setSpacing(6)
+        document_layout.addWidget(self.document_state)
+        document_layout.addWidget(self.document_label)
         self.auto_checkbox = QCheckBox("Automatically insert each new clipboard screenshot")
         self.auto_checkbox.setChecked(True)
         self.auto_checkbox.toggled.connect(self._toggle_auto)
-        self.start_button = QPushButton("Start automatic insertion")
+        document_layout.addWidget(self.auto_checkbox)
+
+        monitor_card = QFrame()
+        monitor_card.setObjectName("monitorCard")
+        monitor_layout = QVBoxLayout(monitor_card)
+        monitor_layout.setContentsMargins(18, 16, 18, 17)
+        monitor_layout.setSpacing(10)
+        monitor_top = QHBoxLayout()
+        monitor_title_box = QVBoxLayout()
+        monitor_title_box.setSpacing(3)
+        monitor_eyebrow = QLabel("AUTOMATION")
+        monitor_eyebrow.setObjectName("cardEyebrow")
+        monitor_title = QLabel("Clipboard monitor")
+        monitor_title.setObjectName("sectionTitle")
+        monitor_title_box.addWidget(monitor_eyebrow)
+        monitor_title_box.addWidget(monitor_title)
+        self.monitor_badge = QLabel("●  READY")
+        self.monitor_badge.setObjectName("statusBadge")
+        self.monitor_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        monitor_top.addLayout(monitor_title_box, 1)
+        monitor_top.addWidget(self.monitor_badge, 0, Qt.AlignmentFlag.AlignTop)
+        monitor_layout.addLayout(monitor_top)
+        monitor_copy = QLabel("New screenshots are added when they appear on your clipboard.")
+        monitor_copy.setObjectName("mutedCopy")
+        monitor_copy.setWordWrap(True)
+        monitor_layout.addWidget(monitor_copy)
+        controls = QHBoxLayout()
+        controls.setSpacing(8)
+        self.start_button = QPushButton("Start monitoring  →")
+        self.start_button.setObjectName("primaryButton")
         self.start_button.clicked.connect(self._start_stop_monitoring)
         self.pause_button = QPushButton("Pause")
+        self.pause_button.setObjectName("secondaryButton")
         self.pause_button.clicked.connect(self._pause_resume)
         self.pause_button.setEnabled(False)
-        self.manual_button = QPushButton("Insert Screenshot Now")
+        controls.addWidget(self.start_button, 2)
+        controls.addWidget(self.pause_button, 1)
+        monitor_layout.addLayout(controls)
+
+        action_heading = QLabel("QUICK ACTIONS")
+        action_heading.setObjectName("cardEyebrow")
+        self.manual_button = QPushButton("＋  Insert screenshot now")
+        self.manual_button.setObjectName("actionButton")
         self.manual_button.clicked.connect(self._manual_insert)
-        self.heading_button = QPushButton("Insert Task Heading")
+        self.heading_button = QPushButton("Tt  Insert task heading")
+        self.heading_button.setObjectName("actionButton")
         self.heading_button.clicked.connect(self._insert_heading_from_main)
-        self.quickbar_button = QPushButton("Show Floating Heading Bar")
+        self.quickbar_button = QPushButton("↗  Floating heading bar")
+        self.quickbar_button.setObjectName("actionButton")
         self.quickbar_button.clicked.connect(self._toggle_quickbar)
-        self.settings_button = QPushButton("Settings")
+        self.settings_button = QPushButton("⚙  Settings")
+        self.settings_button.setObjectName("actionButton")
         self.settings_button.clicked.connect(self._open_settings)
-        self.about_button = QPushButton("About / Support")
+        self.about_button = QPushButton("♥  About & support")
+        self.about_button.setObjectName("actionButton")
         self.about_button.clicked.connect(self._show_about)
+        action_grid = QHBoxLayout()
+        action_grid.setSpacing(8)
+        action_left = QVBoxLayout()
+        action_left.setSpacing(8)
+        action_right = QVBoxLayout()
+        action_right.setSpacing(8)
+        action_left.addWidget(self.manual_button)
+        action_left.addWidget(self.quickbar_button)
+        action_right.addWidget(self.heading_button)
+        action_right.addWidget(self.settings_button)
+        action_grid.addLayout(action_left, 1)
+        action_grid.addLayout(action_right, 1)
 
-        controls = QHBoxLayout()
-        controls.addWidget(self.start_button)
-        controls.addWidget(self.pause_button)
-        manual_row = QHBoxLayout()
-        manual_row.addWidget(self.manual_button)
-        manual_row.addWidget(self.heading_button)
-        tools_row = QHBoxLayout()
-        tools_row.addWidget(self.quickbar_button)
-        tools_row.addWidget(self.settings_button)
-        tools_row.addWidget(self.about_button)
+        activity_card = QFrame()
+        activity_card.setObjectName("paperCard")
+        activity_layout = QVBoxLayout(activity_card)
+        activity_layout.setContentsMargins(18, 14, 18, 12)
+        activity_layout.setSpacing(8)
+        activity_top = QHBoxLayout()
+        activity_title = QLabel("Recent activity")
+        activity_title.setObjectName("sectionTitle")
+        activity_caption = QLabel("LATEST FIRST")
+        activity_caption.setObjectName("cardEyebrow")
+        activity_top.addWidget(activity_title)
+        activity_top.addStretch(1)
+        activity_top.addWidget(activity_caption)
+        activity_layout.addLayout(activity_top)
+        self.activity_list = QListWidget()
+        self.activity_list.setObjectName("activityList")
+        self.activity_list.setMinimumHeight(96)
+        self.activity_list.setMaximumHeight(140)
+        self.activity_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.activity_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+        activity_layout.addWidget(self.activity_list)
+        self.status_label = QLabel("Ready when you are.")
+        self.status_label.setObjectName("statusLine")
+        self.status_label.setWordWrap(True)
+        self.clipboard_label = QLabel("Clipboard: waiting for an image")
+        self.clipboard_label.setObjectName("mutedCopy")
+        self.clipboard_label.setWordWrap(True)
+        activity_layout.addWidget(self.status_label)
+        activity_layout.addWidget(self.clipboard_label)
 
-        note = QLabel("Tip: open the intended Word document first. Screenshots are inserted locally; save the document in Word when ready.")
+        note = QLabel("Tip  /  Open the document you want to use before starting. Word remains in control of saving your work.")
+        note.setObjectName("footerNote")
         note.setWordWrap(True)
-        note.setObjectName("note")
 
         layout = QVBoxLayout()
         layout.setSpacing(12)
-        layout.setContentsMargins(18, 0, 18, 18)
+        layout.setContentsMargins(20, 0, 20, 18)
         layout.addWidget(titlebar)
+        layout.addWidget(eyebrow)
         layout.addWidget(title)
         layout.addWidget(subtitle)
-        layout.addSpacing(4)
-        layout.addWidget(self.document_label)
-        layout.addWidget(self.auto_checkbox)
-        layout.addLayout(controls)
-        layout.addLayout(manual_row)
-        layout.addLayout(tools_row)
-        layout.addWidget(self.clipboard_label)
-        layout.addWidget(self.status_label)
+        layout.addWidget(document_card)
+        layout.addWidget(monitor_card)
+        layout.addWidget(action_heading)
+        layout.addLayout(action_grid)
+        layout.addWidget(self.about_button)
+        layout.addWidget(activity_card)
         layout.addWidget(note)
-        layout.addStretch(1)
         container = QWidget()
+        container.setObjectName("mainSurface")
         container.setLayout(layout)
         self.setCentralWidget(container)
-        # Premium dark UI with high-contrast controls and clearer visual grouping.
         self.setStyleSheet("""
-            QMainWindow, QWidget { background: #111827; color: #e5e7eb; font-size: 10pt; }
-            QWidget#customTitleBar { background: #0b1220; border-bottom: 1px solid #293548; }
-            QLabel#brandMark { background: #2563eb; color: white; border-radius: 9px; font-size: 12pt; font-weight: 900; }
-            QLabel#brandName { color: #f8fafc; font-size: 10pt; font-weight: 800; }
-            QLabel#brandHint { color: #64748b; font-size: 7pt; font-weight: 700; }
-            QPushButton#windowControl { background: transparent; border: none; border-radius: 5px; padding: 2px; color: #cbd5e1; font-size: 12pt; }
-            QPushButton#windowControl:hover { background: #263449; }
-            QPushButton#closeControl { background: transparent; border: none; border-radius: 5px; padding: 2px; color: #cbd5e1; font-size: 17pt; }
-            QPushButton#closeControl:hover { background: #dc2626; color: white; }
-            QWidget#centralwidget { background: #111827; }
-            QLabel { color: #cbd5e1; }
-            QLabel#appTitle { font-size: 25px; font-weight: 800; color: #f8fafc; padding-bottom: 2px; }
-            QLabel#note { color: #94a3b8; background: #172033; border: 1px solid #293548; border-radius: 8px; padding: 10px; }
-            QPushButton { color: #f8fafc; background: #263449; border: 1px solid #3a4b63; border-radius: 8px; padding: 10px 12px; font-weight: 600; }
-            QPushButton:hover { background: #344761; border-color: #647da0; }
-            QPushButton:pressed { background: #1d293b; }
-            QPushButton:disabled { color: #718096; background: #1b2534; border-color: #273447; }
-            QCheckBox { color: #e2e8f0; spacing: 8px; padding: 8px 0; }
-            QCheckBox::indicator { width: 17px; height: 17px; }
-            QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #f8fafc; background: #0b1220; selection-background-color: #2563eb; padding: 8px; border: 1px solid #37465c; border-radius: 7px; }
-            QComboBox QAbstractItemView { background: #172033; color: #f8fafc; selection-background-color: #2563eb; }
-            QScrollBar:vertical { background: #111827; width: 10px; margin: 0; }
-            QScrollBar::handle:vertical { background: #37465c; border-radius: 4px; min-height: 24px; }
-            QToolTip { color: #f8fafc; background: #0b1220; border: 1px solid #475569; }
+            QMainWindow, QWidget#mainSurface { background: #F5F0E7; color: #211E1A; font-size: 10pt; }
+            QWidget#customTitleBar { background: #F5F0E7; border-bottom: 1px solid #E4DACE; }
+            QLabel#brandMark { background: #C85A2B; color: #FFF9F2; border-radius: 11px; font-size: 16pt; font-weight: 900; }
+            QLabel#brandName { color: #211E1A; font-size: 9pt; font-weight: 900; letter-spacing: 1px; }
+            QLabel#brandHint { color: #8D8174; font-size: 7pt; font-weight: 800; }
+            QPushButton#windowControl { background: transparent; border: none; border-radius: 6px; padding: 2px; color: #62594F; font-size: 12pt; }
+            QPushButton#windowControl:hover { background: #E9DFD2; }
+            QPushButton#closeControl { background: transparent; border: none; border-radius: 6px; color: #62594F; font-size: 17pt; }
+            QPushButton#closeControl:hover { background: #C85A2B; color: white; }
+            QLabel#eyebrow { color: #C85A2B; font-size: 8pt; font-weight: 900; letter-spacing: 2px; padding-top: 5px; }
+            QLabel#appTitle { color: #211E1A; font-family: Georgia, 'Times New Roman'; font-size: 27pt; font-weight: 700; padding: 0; }
+            QLabel#appSubtitle { color: #6F665C; font-size: 10pt; padding-bottom: 3px; }
+            QFrame#paperCard { background: #FFFCF6; border: 1px solid #E4DACE; border-radius: 13px; }
+            QFrame#monitorCard { background: #EDE3D5; border: 1px solid #E0D1BF; border-radius: 13px; }
+            QLabel#cardEyebrow { color: #A45A39; font-size: 8pt; font-weight: 900; letter-spacing: 1.5px; }
+            QLabel#documentValue { color: #29241F; font-size: 11pt; font-weight: 750; }
+            QLabel#sectionTitle { color: #211E1A; font-size: 14pt; font-weight: 850; }
+            QLabel#mutedCopy { color: #766B60; font-size: 9pt; }
+            QLabel#statusBadge { background: #F9F0E3; color: #A45A39; border: 1px solid #DDC4AC; border-radius: 9px; padding: 6px 9px; font-size: 8pt; font-weight: 900; }
+            QLabel#statusLine { color: #33271F; font-size: 9pt; font-weight: 700; }
+            QLabel#footerNote { color: #8B7D6E; font-size: 8pt; padding: 2px 1px 0 1px; }
+            QPushButton { color: #33271F; background: #FFFCF6; border: 1px solid #DCCDBB; border-radius: 9px; padding: 10px 12px; font-weight: 750; text-align: left; }
+            QPushButton:hover { background: #F1E5D6; border-color: #C8AD93; }
+            QPushButton:pressed { background: #E7D4C0; }
+            QPushButton:disabled { color: #A99D90; background: #E9E0D5; border-color: #DDD2C5; }
+            QPushButton#primaryButton { color: #FFF9F2; background: #C85A2B; border-color: #C85A2B; text-align: center; }
+            QPushButton#primaryButton:hover { background: #A94720; border-color: #A94720; }
+            QPushButton#secondaryButton { background: #F8F0E5; text-align: center; }
+            QPushButton#actionButton { min-height: 18px; }
+            QCheckBox { color: #5F584F; spacing: 8px; padding-top: 7px; font-size: 9pt; }
+            QCheckBox::indicator { width: 16px; height: 16px; }
+            QCheckBox::indicator:unchecked { background: #FFFCF6; border: 1px solid #BBAA98; border-radius: 4px; }
+            QCheckBox::indicator:checked { background: #C85A2B; border: 1px solid #C85A2B; border-radius: 4px; }
+            QListWidget#activityList { background: transparent; color: #655A4F; border: none; outline: none; padding: 0; }
+            QListWidget#activityList::item { padding: 5px 2px; border-bottom: 1px solid #EEE5D9; }
+            QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #29241F; background: #FFFCF6; selection-background-color: #C85A2B; padding: 8px; border: 1px solid #DCCDBB; border-radius: 7px; }
+            QComboBox QAbstractItemView { background: #FFFCF6; color: #29241F; selection-background-color: #F1E5D6; }
+            QToolTip { color: #FFF9F2; background: #33271F; border: 1px solid #C85A2B; padding: 5px; }
         """)
         self.quickbar = FloatingHeadingBar()
         self.quickbar.set_callbacks(
@@ -374,6 +472,7 @@ class MainWindow(QMainWindow):
             self._hide_word_preview,
         )
         self._refresh_document()
+        self._set_status("Ready. Open Word, then start monitoring.")
         self._update_auto_controls()
 
     def _toggle_maximize(self):
@@ -420,9 +519,14 @@ class MainWindow(QMainWindow):
 
     def _update_auto_controls(self):
         self.start_button.setEnabled(self._auto_enabled)
-        self.pause_button.setEnabled(self._auto_enabled and self.monitor.running)
+        self.pause_button.setEnabled(self._auto_enabled)
         self.pause_button.setText("Pause" if self.monitor.running else "Resume")
-        self.start_button.setText("Stop automatic insertion" if self.monitor.running else "Start automatic insertion")
+        self.start_button.setText("Stop monitoring" if self.monitor.running else "Start monitoring  →")
+        self.monitor_badge.setText("●  MONITORING" if self.monitor.running else "●  READY")
+        self.monitor_badge.setStyleSheet(
+            "background:#E0EBD9;color:#42633C;border:1px solid #B8CEAD;border-radius:9px;padding:6px 9px;font-size:8pt;font-weight:900;"
+            if self.monitor.running else ""
+        )
 
     def _start_monitoring(self):
         if not self._auto_enabled:
@@ -556,7 +660,13 @@ class MainWindow(QMainWindow):
             self.document_label.setText("Word document: none detected — open desktop Word and a document.")
 
     def _set_status(self, message):
-        self.status_label.setText(f"Status: {message}")
+        self.status_label.setText(message)
+        stamp = __import__("datetime").datetime.now().strftime("%H:%M:%S")
+        self._activity_items.insert(0, f"{stamp}   ·   {message}")
+        self._activity_items = self._activity_items[:5]
+        self.activity_list.clear()
+        for item_text in self._activity_items:
+            self.activity_list.addItem(QListWidgetItem(item_text))
 
     def changeEvent(self, event):
         # The quick bar is an independent top-level window, so it remains visible
