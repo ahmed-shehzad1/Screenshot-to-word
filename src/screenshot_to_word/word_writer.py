@@ -32,8 +32,11 @@ class WordWriter:
         _, document = self._word_and_document()
         return str(document.Name)
 
-    def append_image(self, image, max_width_inches: float = 6.3) -> str:
-        """Append an embedded image to the active document and return its name."""
+    def append_image(
+        self, image, max_width_inches: float = 6.3,
+        max_height_inches: float = 9.0, alignment: str = "center",
+    ) -> str:
+        """Append an embedded image, proportionally fitting width and height limits."""
         temp_path = None
         try:
             _, document = self._word_and_document()
@@ -43,8 +46,6 @@ class WordWriter:
             image.save(temp_path, format="PNG")
 
             end_pos = max(0, int(document.Content.End) - 1)
-            # Start a new paragraph only when the current final paragraph already
-            # contains content. Do not add an extra paragraph after each image.
             end_range = document.Range(end_pos, end_pos)
             if end_pos > 0:
                 try:
@@ -53,6 +54,7 @@ class WordWriter:
                         end_range.InsertAfter("\r")
                 except Exception:
                     end_range.InsertAfter("\r")
+
             insert_pos = max(0, int(document.Content.End) - 1)
             shape = document.InlineShapes.AddPicture(
                 FileName=str(Path(temp_path).resolve()),
@@ -60,17 +62,25 @@ class WordWriter:
                 SaveWithDocument=True,
                 Range=document.Range(insert_pos, insert_pos),
             )
-            # Word uses points; preserve the image's aspect ratio.
-            width_points = max(72.0, float(max_width_inches) * 72.0)
-            if float(shape.Width) > width_points:
+
+            # Word dimensions are points. Apply the tighter scale factor so neither
+            # maximum is exceeded, while preserving the screenshot's aspect ratio.
+            max_width_points = max(72.0, float(max_width_inches) * 72.0)
+            max_height_points = max(72.0, float(max_height_inches) * 72.0)
+            original_width = float(shape.Width)
+            original_height = float(shape.Height)
+            scale = min(1.0, max_width_points / original_width, max_height_points / original_height)
+            if scale < 1.0:
                 shape.LockAspectRatio = True
-                shape.Width = width_points
-            # Remove Word's default paragraph spacing around screenshot paragraphs.
+                shape.Width = original_width * scale
+
             try:
                 paragraph = shape.Range.ParagraphFormat
                 paragraph.SpaceBefore = 0
                 paragraph.SpaceAfter = 0
-                paragraph.LineSpacingRule = 0  # single spacing
+                paragraph.LineSpacingRule = 0
+                alignment_value = {"left": 0, "center": 1, "right": 2}.get(str(alignment).lower(), 1)
+                paragraph.Alignment = alignment_value
             except Exception:
                 pass
             return document_name
@@ -96,7 +106,6 @@ class WordWriter:
             position = max(0, int(document.Content.End) - 1)
             target = document.Range(position, position)
             target.InsertAfter(heading + "\r")
-            # Format the paragraph just added as Word's Heading 2 style.
             start = max(0, int(document.Content.End) - len(heading) - 2)
             heading_range = document.Range(start, start + len(heading))
             heading_range.Style = "Heading 2"
