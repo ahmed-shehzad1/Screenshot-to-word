@@ -1,6 +1,6 @@
 """Main GUI, floating heading bar, insertion controls, and preferences."""
 from PySide6.QtCore import Qt, QSettings, QUrl
-from PySide6.QtGui import QDesktopServices, QMovie
+from PySide6.QtGui import QDesktopServices, QMovie, QPixmap, QIcon
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -128,64 +128,71 @@ class FloatingHeadingBar(QDialog):
 
 
 class AboutDialog(QDialog):
-    """Polished About and open-source support dialog."""
+    """Compact, theme-matched About and open-source support dialog."""
     GITHUB_PROFILE = "https://github.com/ahmed-shehzad1"
     REPOSITORY_URL = "https://github.com/ahmed-shehzad1/Screenshot-to-word"
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About Screenshot to Word")
-        self.setMinimumWidth(500)
+        self.setWindowIcon(QIcon(str(Path(__file__).resolve().parent / "assets" / "app_icon.png")))
+        self.setMinimumSize(520, 440)
+        self.resize(560, 480)
         self.setStyleSheet("""
-            QDialog { background: #f4f0e7; color: #28332f; }
-            QLabel { color: #59675e; font-size: 10pt; }
-            QLabel#heroName { color: #26352f; font-size: 21pt; font-weight: 800; }
-            QLabel#eyebrow { color: #557b6f; font-size: 9pt; font-weight: 700; letter-spacing: 1px; }
-            QFrame#panel { background: #fffdf8; border: 1px solid #ded8cc; border-radius: 14px; }
-            QPushButton { color: #3a4942; background: #fffdf8; border: 1px solid #d7d1c6; border-radius: 9px; padding: 11px 14px; font-weight: 700; }
-            QPushButton:hover { background: #f0ece3; }
-            QPushButton#primary { color: #fffdf8; background: #456b60; border-color: #456b60; }
-            QPushButton#primary:hover { background: #557b6f; }
-            QPushButton#quiet { background: transparent; border-color: #d7d1c6; }
+            QDialog { background:#f4f0e7; color:#28332f; }
+            QLabel { color:#58665d; font-size:10pt; }
+            QLabel#eyebrow { color:#668477; font-size:8pt; font-weight:800; letter-spacing:1px; }
+            QLabel#heroName { color:#26352f; font-size:20pt; font-weight:800; }
+            QLabel#sectionTitle { color:#2e443a; font-size:12pt; font-weight:800; }
+            QFrame#panel { background:#fffdf8; border:1px solid #ded8cc; border-radius:14px; }
+            QFrame#heroPanel { background:#e9e2d5; border:1px solid #d8d0c2; border-radius:16px; }
+            QPushButton { color:#3a4942; background:#fffdf8; border:1px solid #d7d1c6; border-radius:9px; padding:10px 13px; font-weight:700; }
+            QPushButton:hover { background:#f0ece3; }
+            QPushButton#primary { color:#fffdf8; background:#456b60; border-color:#456b60; }
+            QPushButton#primary:hover { background:#557b6f; }
         """)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(22, 22, 22, 20)
-        root.setSpacing(14)
+        root.setContentsMargins(22, 20, 22, 18)
+        root.setSpacing(13)
 
         hero = QFrame()
-        hero.setObjectName("panel")
-        hero_layout = QHBoxLayout(hero)
-        hero_layout.setContentsMargins(18, 18, 18, 18)
-        logo = QLabel("SW")
+        hero.setObjectName("heroPanel")
+        hero_row = QHBoxLayout(hero)
+        hero_row.setContentsMargins(18, 16, 18, 16)
+        hero_row.setSpacing(15)
+        logo = QLabel()
+        logo.setFixedSize(88, 88)
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setFixedSize(66, 66)
-        logo.setStyleSheet("background:#2563eb; color:white; border-radius:16px; font-size:21pt; font-weight:900;")
+        pixmap = QPixmap(str(Path(__file__).resolve().parent / "assets" / "app_icon.png"))
+        if not pixmap.isNull():
+            logo.setPixmap(pixmap.scaled(88, 88, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         intro = QVBoxLayout()
-        eyebrow = QLabel("THE DEVELOPER")
+        intro.setSpacing(4)
+        eyebrow = QLabel("A SMALL TOOL FOR BETTER DOCUMENTATION")
         eyebrow.setObjectName("eyebrow")
-        name = QLabel("Ahmed Shahzad")
+        name = QLabel("Screenshot to Word")
         name.setObjectName("heroName")
-        subtitle = QLabel("Student · Air University, Islamabad · 21")
+        subtitle = QLabel("Built by Ahmed Shahzad · Air University, Islamabad")
         subtitle.setWordWrap(True)
         intro.addWidget(eyebrow)
         intro.addWidget(name)
         intro.addWidget(subtitle)
-        hero_layout.addWidget(logo)
-        hero_layout.addSpacing(14)
-        hero_layout.addLayout(intro, 1)
+        intro.addStretch(1)
+        hero_row.addWidget(logo)
+        hero_row.addLayout(intro, 1)
         root.addWidget(hero)
 
         story_panel = QFrame()
         story_panel.setObjectName("panel")
         story_layout = QVBoxLayout(story_panel)
-        story_layout.setContentsMargins(18, 16, 18, 16)
-        story_layout.setSpacing(8)
+        story_layout.setContentsMargins(17, 15, 17, 15)
+        story_layout.setSpacing(7)
         story_heading = QLabel("Why I built this")
-        story_heading.setStyleSheet("color:#f8fafc; font-size:12pt; font-weight:800;")
-        story = QLabel("I love coding things that can help people. Screenshot to Word is a small project to make capturing and organizing screenshots in Microsoft Word simpler and faster.")
+        story_heading.setObjectName("sectionTitle")
+        story = QLabel("I love coding things that can help people. Screenshot to Word makes it easier to capture, arrange, and document university lab work directly in Microsoft Word.")
         story.setWordWrap(True)
-        story.setMinimumHeight(54)
+        story.setMinimumHeight(52)
         story_layout.addWidget(story_heading)
         story_layout.addWidget(story)
         root.addWidget(story_panel)
@@ -193,18 +200,19 @@ class AboutDialog(QDialog):
         support_panel = QFrame()
         support_panel.setObjectName("panel")
         support_layout = QVBoxLayout(support_panel)
-        support_layout.setContentsMargins(18, 16, 18, 18)
-        support_layout.setSpacing(9)
-        support_heading = QLabel("Enjoying Screenshot to Word?")
-        support_heading.setStyleSheet("color:#f8fafc; font-size:13pt; font-weight:800;")
-        support_copy = QLabel("Thanks for trying it! Following me and starring the repository helps other people discover the project and encourages me to build more useful tools.")
+        support_layout.setContentsMargins(17, 15, 17, 16)
+        support_layout.setSpacing(8)
+        support_heading = QLabel("Support the project")
+        support_heading.setObjectName("sectionTitle")
+        support_copy = QLabel("If this app is useful, you can help it reach more people by following the developer or starring the GitHub repository. Thank you for your support!")
         support_copy.setWordWrap(True)
         support_layout.addWidget(support_heading)
         support_layout.addWidget(support_copy)
         buttons = QHBoxLayout()
+        buttons.setSpacing(9)
         profile_button = QPushButton("↗  Follow on GitHub")
         profile_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.GITHUB_PROFILE)))
-        star_button = QPushButton("★  Star the repository")
+        star_button = QPushButton("★  Star repository")
         star_button.setObjectName("primary")
         star_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.REPOSITORY_URL)))
         buttons.addWidget(profile_button)
@@ -215,7 +223,6 @@ class AboutDialog(QDialog):
         footer = QHBoxLayout()
         footer.addStretch(1)
         close_button = QPushButton("Done")
-        close_button.setObjectName("quiet")
         close_button.clicked.connect(self.accept)
         footer.addWidget(close_button)
         root.addLayout(footer)
@@ -226,6 +233,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = QSettings("ScreenshotToWord", "ScreenshotToWord")
         self.setWindowTitle("Screenshot to Word")
+        self.app_icon_path = Path(__file__).resolve().parent / "assets" / "app_icon.png"
+        self.setWindowIcon(QIcon(str(self.app_icon_path)))
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
         self.setMinimumSize(850, 620)
         self.resize(1040, 720)
@@ -239,12 +248,15 @@ class MainWindow(QMainWindow):
         titlebar = QWidget()
         titlebar.setObjectName("customTitleBar")
         titlebar_layout = QHBoxLayout(titlebar)
-        titlebar_layout.setContentsMargins(18, 9, 10, 9)
-        titlebar_layout.setSpacing(10)
-        brand_mark = QLabel("SW")
+        titlebar_layout.setContentsMargins(18, 8, 12, 8)
+        titlebar_layout.setSpacing(12)
+        brand_mark = QLabel()
         brand_mark.setObjectName("brandMark")
         brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        brand_mark.setFixedSize(36, 36)
+        brand_mark.setFixedSize(42, 42)
+        brand_pixmap = QPixmap(str(self.app_icon_path))
+        if not brand_pixmap.isNull():
+            brand_mark.setPixmap(brand_pixmap.scaled(42, 42, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         brand_name = QLabel("Screenshot to Word")
         brand_name.setObjectName("brandName")
         brand_hint = QLabel("A CALMER WAY TO DOCUMENT YOUR WORK")
@@ -383,13 +395,13 @@ class MainWindow(QMainWindow):
 
         self.setStyleSheet("""
             QMainWindow, QWidget { background: #f4f0e7; color: #28332f; font-size: 10pt; }
-            QWidget#customTitleBar { background: #e9e2d5; border-bottom: 1px solid #d8d0c2; }
-            QLabel#brandMark { background: #456b60; color: #fffdf8; border-radius: 10px; font-size: 12pt; font-weight: 900; }
+            QWidget#customTitleBar { background: #eee8dc; border-bottom: 1px solid #d8d0c2; }
+            QLabel#brandMark { background: transparent; border-radius: 11px; }
             QLabel#brandName { color: #26352f; font-size: 10pt; font-weight: 800; }
             QLabel#brandHint { color: #7a8278; font-size: 7pt; font-weight: 700; }
-            QPushButton#windowControl { background: transparent; border: none; border-radius: 5px; padding: 2px; color: #47564f; font-size: 12pt; }
+            QPushButton#windowControl { background: transparent; border: none; border-radius: 7px; padding: 2px; color: #47564f; font-size: 12pt; }
             QPushButton#windowControl:hover { background: #d9d1c4; }
-            QPushButton#closeControl { background: transparent; border: none; border-radius: 5px; padding: 2px; color: #47564f; font-size: 17pt; }
+            QPushButton#closeControl { background: transparent; border: none; border-radius: 7px; padding: 2px; color: #47564f; font-size: 17pt; }
             QPushButton#closeControl:hover { background: #b94c42; color: white; }
             QFrame#studyPanel { background: #e8dfd0; border: 1px solid #d8cdbb; border-radius: 16px; }
             QLabel#studyArt { background: #d8c8b2; border-radius: 11px; }
@@ -430,8 +442,15 @@ class MainWindow(QMainWindow):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             child = self.childAt(event.position().toPoint())
-            # Drag only when the click is on the title-bar background/labels.
-            if child is not None and (child.objectName() in {"customTitleBar", "brandName", "brandHint", "brandMark"}):
+            # Allow dragging from any empty/title-bar label area, but not its buttons.
+            probe = child
+            in_titlebar = False
+            while probe is not None:
+                if probe.objectName() == "customTitleBar":
+                    in_titlebar = True
+                    break
+                probe = probe.parentWidget()
+            if in_titlebar and not isinstance(child, QPushButton):
                 self._drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
                 event.accept()
                 return

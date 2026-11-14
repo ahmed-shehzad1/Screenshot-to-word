@@ -32,11 +32,29 @@ class WordWriter:
         _, document = self._word_and_document()
         return str(document.Name)
 
+    @staticmethod
+    def _last_paragraph_has_content(document) -> bool:
+        """Return whether the final Word paragraph already contains content."""
+        try:
+            paragraph = document.Paragraphs.Last
+            text = str(paragraph.Range.Text).replace("\r", "").replace("\x07", "").strip()
+            inline_shapes = int(paragraph.Range.InlineShapes.Count)
+            return bool(text) or inline_shapes > 0
+        except Exception:
+            return False
+
+    @classmethod
+    def _start_new_paragraph(cls, document):
+        """Create a fresh paragraph only when the final paragraph is occupied."""
+        if cls._last_paragraph_has_content(document):
+            end = max(0, int(document.Content.End) - 1)
+            document.Range(end, end).InsertAfter("\r")
+
     def append_image(
         self, image, max_width_inches: float = 6.3,
         max_height_inches: float = 9.0, alignment: str = "center",
     ) -> str:
-        """Append an embedded image, proportionally fitting width and height limits."""
+        """Append an embedded image in its own paragraph, fitting both size limits."""
         temp_path = None
         try:
             _, document = self._word_and_document()
@@ -45,16 +63,8 @@ class WordWriter:
                 temp_path = temp_file.name
             image.save(temp_path, format="PNG")
 
-            end_pos = max(0, int(document.Content.End) - 1)
-            end_range = document.Range(end_pos, end_pos)
-            if end_pos > 0:
-                try:
-                    final_para = document.Paragraphs.Last.Range
-                    if final_para.End - final_para.Start > 1:
-                        end_range.InsertAfter("\r")
-                except Exception:
-                    end_range.InsertAfter("\r")
-
+            # Never share a paragraph with a heading or a previous inline image.
+            self._start_new_paragraph(document)
             insert_pos = max(0, int(document.Content.End) - 1)
             shape = document.InlineShapes.AddPicture(
                 FileName=str(Path(temp_path).resolve()),
@@ -63,8 +73,6 @@ class WordWriter:
                 Range=document.Range(insert_pos, insert_pos),
             )
 
-            # Word dimensions are points. Apply the tighter scale factor so neither
-            # maximum is exceeded, while preserving the screenshot's aspect ratio.
             max_width_points = max(72.0, float(max_width_inches) * 72.0)
             max_height_points = max(72.0, float(max_height_inches) * 72.0)
             original_width = float(shape.Width)
@@ -74,15 +82,12 @@ class WordWriter:
                 shape.LockAspectRatio = True
                 shape.Width = original_width * scale
 
-            try:
-                paragraph = shape.Range.ParagraphFormat
-                paragraph.SpaceBefore = 0
-                paragraph.SpaceAfter = 0
-                paragraph.LineSpacingRule = 0
-                alignment_value = {"left": 0, "center": 1, "right": 2}.get(str(alignment).lower(), 1)
-                paragraph.Alignment = alignment_value
-            except Exception:
-                pass
+            # Set alignment on the image's own paragraph only.
+            paragraph = shape.Range.ParagraphFormat
+            paragraph.SpaceBefore = 0
+            paragraph.SpaceAfter = 0
+            paragraph.LineSpacingRule = 0
+            paragraph.Alignment = {"left": 0, "center": 1, "right": 2}.get(str(alignment).lower(), 1)
             return document_name
         except WordAutomationError:
             raise
@@ -96,19 +101,21 @@ class WordWriter:
                     pass
 
     def append_heading(self, heading: str) -> str:
-        """Append a formatted heading to the active Word document."""
+        """Append a left-aligned Heading 2 in a paragraph separate from images."""
         heading = heading.strip()
         if not heading:
             raise WordAutomationError("Type a task heading before inserting it.")
         try:
             _, document = self._word_and_document()
             document_name = str(document.Name)
+            self._start_new_paragraph(document)
             position = max(0, int(document.Content.End) - 1)
             target = document.Range(position, position)
             target.InsertAfter(heading + "\r")
-            start = max(0, int(document.Content.End) - len(heading) - 2)
-            heading_range = document.Range(start, start + len(heading))
+            heading_range = document.Range(position, position + len(heading))
             heading_range.Style = "Heading 2"
+            # Do not inherit right/center alignment from the preceding screenshot.
+            heading_range.ParagraphFormat.Alignment = 0
             return document_name
         except WordAutomationError:
             raise
