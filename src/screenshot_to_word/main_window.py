@@ -1,4 +1,6 @@
 """Main GUI, floating heading bar, insertion controls, and preferences."""
+import ctypes
+
 from PySide6.QtCore import Qt, QSettings, QUrl
 from PySide6.QtGui import QDesktopServices
 import win32com.client
@@ -233,6 +235,8 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(620, 600)
         self.resize(760, 700)
         self._drag_position = None
+        self._word_preview_app = None
+        self._word_preview_hwnd = None
         self.writer = WordWriter()
         self.monitor = ClipboardMonitor(int(self.settings.value("monitor_interval_ms", 300)), self)
         self.monitor.image_detected.connect(self._insert_image)
@@ -510,43 +514,69 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, title, message)
 
     def _show_word_preview(self):
-        """Show Word while the floating W button is held down."""
+        """Temporarily show the already-open Word document while W is held."""
+        # Do not Dispatch a new Word process or create a blank document here.
+        # The preview is specifically for the document the user already has open.
         try:
-            try:
-                self._word_preview_app = win32com.client.GetActiveObject("Word.Application")
-            except Exception:
-                self._word_preview_app = win32com.client.Dispatch("Word.Application")
-            word = self._word_preview_app
-            word.Visible = True
+            word = win32com.client.GetActiveObject("Word.Application")
             if word.Documents.Count == 0:
-                word.Documents.Add()
+                self._word_preview_app = None
+                self._word_preview_hwnd = None
+                self._set_status("No Word document is open. Open your document first, then hold W.")
+                return
+
+            window = word.ActiveWindow
+            if window is None:
+                self._set_status("Word is open, but its document window could not be accessed.")
+                return
+
+            hwnd = int(window.Hwnd)
+            if hwnd <= 0:
+                raise RuntimeError("Word returned an invalid window handle.")
+
+            self._word_preview_app = word
+            self._word_preview_hwnd = hwnd
+            word.Visible = True
             try:
-                word.WindowState = 0  # wdWindowStateNormal
-                word.Activate()
-                if word.ActiveWindow is not None:
-                    word.ActiveWindow.Activate()
+                window.WindowState = 0  # wdWindowStateNormal
             except Exception:
                 pass
+
+            user32 = ctypes.windll.user32
+            user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            user32.BringWindowToTop(hwnd)
+            user32.SetForegroundWindow(hwnd)
+            try:
+                window.Activate()
+            except Exception:
+                pass
+
             self._refresh_document()
-            self._set_status("Hold the W button to preview Word; release it to minimize Word.")
+            self._set_status("Word preview is visible. Release W to minimize it again.")
         except Exception:
             self._word_preview_app = None
-            self._set_status("Could not show Microsoft Word. Check that desktop Word is installed.")
+            self._word_preview_hwnd = None
+            self._set_status("Could not access an open Word document. Open Word and your document first.")
 
     def _hide_word_preview(self):
-        """Minimize Word immediately when the floating W button is released."""
-        word = getattr(self, "_word_preview_app", None)
-        if word is None:
+        """Minimize the same Word window that was restored when W was pressed."""
+        hwnd = self._word_preview_hwnd
+        word = self._word_preview_app
+        # Clear first so repeated release/focus events cannot act on a stale handle.
+        self._word_preview_hwnd = None
+        self._word_preview_app = None
+        if not hwnd:
             return
+
         try:
-            word.WindowState = 2  # wdWindowStateMinimize
-            try:
-                if word.ActiveWindow is not None:
-                    word.ActiveWindow.WindowState = 2
-            except Exception:
-                pass
+            ctypes.windll.user32.ShowWindow(int(hwnd), 6)  # SW_MINIMIZE
         except Exception:
-            pass
+            # COM fallback for systems where the Win32 window call fails.
+            if word is not None:
+                try:
+                    word.WindowState = 2  # wdWindowStateMinimize
+                except Exception:
+                    pass
 
     def _refresh_document(self):
         try:
