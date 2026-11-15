@@ -11,7 +11,7 @@ A lightweight Windows desktop utility for appending clipboard screenshots to the
 - **Duplicate protection:** rapid repeated clipboard updates for the same image are ignored.
 - **Settings:** configure clipboard polling interval, maximum image width, and error notifications.
 - **Local processing:** screenshots are handled on your computer and are not uploaded to a server.
-- **Windows installer workflow:** packaging scripts are included for a future public release.
+- **Windows installer:** build a standalone Windows application and installer with the included build script and Inno Setup configuration.
 
 ## Requirements
 
@@ -31,14 +31,16 @@ python -m screenshot_to_word
 
 Open the target Word document first. Start automatic insertion to monitor new clipboard images, or use **Insert Screenshot Now** for manual insertion. The floating heading bar can insert a task heading into the active document. Save your document normally in Word.
 
-## Build a Windows executable locally
+## Build the Windows installer locally
 
-```powershell
-python -m pip install pyinstaller
-pyinstaller --noconfirm --clean --windowed --name ScreenshotToWord --paths src --collect-all PySide6 src/screenshot_to_word/__main__.py
-```
+1. Install Python 3.11 (64-bit) and Inno Setup 6.
+2. Open this repository folder in Windows File Explorer.
+3. Double-click `build.bat`.
+4. When the build finishes, find `ScreenshotToWord-Setup-0.2.1.exe` in the `release` folder.
 
-The executable folder is created under `dist\ScreenshotToWord\`. To create a setup installer, install Inno Setup 6 and compile `installer/ScreenshotToWord.iss` after building the executable folder.
+The build bundles the Python runtime, dependencies, graphical application icon, and animated assets. End users do not need Python or VS Code. Microsoft Word desktop is still required for Word automation.
+
+A GitHub Actions workflow is also included. Push a version tag such as `v0.2.1` to build the installer and attach it to a GitHub Release automatically.
 
 ## Important notes
 

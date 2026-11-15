@@ -8,3 +8,24 @@ dist/
 release/
 .idea/
 .vscode/
+
+
+# Python environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# PyInstaller build output
+build/
+dist/
+
+# Windows installer output
+release/
+*.exe
+
+# Python packaging
+*.egg-info/
+
+# Generated Python package metadata
+src/screenshot_to_word.egg-info/

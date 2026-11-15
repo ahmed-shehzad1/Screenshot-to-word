@@ -1,6 +1,6 @@
-; Build the app first with PyInstaller, then compile this file with Inno Setup 6.
+; Build with PyInstaller first, then compile with Inno Setup 6.
 #define MyAppName "Screenshot to Word"
-#define MyAppVersion "0.2.0"
+#define MyAppVersion "0.2.1"
 #define MyAppPublisher "Screenshot-to-Word contributors"
 #define MyAppExeName "ScreenshotToWord.exe"
 
@@ -13,6 +13,8 @@ DefaultDirName={autopf}\Screenshot to Word
 DefaultGroupName={#MyAppName}
 OutputDir=..\release
 OutputBaseFilename=ScreenshotToWord-Setup-{#MyAppVersion}
+SetupIconFile=..\src\screenshot_to_word\assets\app_icon.ico
+UninstallDisplayIcon={app}\ScreenshotToWord.exe
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -23,8 +25,8 @@ PrivilegesRequired=lowest
 Source: "..\dist\ScreenshotToWord\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\Screenshot to Word"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\Screenshot to Word"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\Screenshot to Word"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\screenshot_to_word\assets\app_icon.ico"
+Name: "{autodesktop}\Screenshot to Word"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\_internal\screenshot_to_word\assets\app_icon.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
